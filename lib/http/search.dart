@@ -12,6 +12,7 @@ import 'index.dart';
 
 class SearchHttp {
   static Box setting = GStrorage.setting;
+
   static Future hotSearchList() async {
     var res = await Request().get(Api.hotSearchList);
     if (res.data is String) {
@@ -38,8 +39,10 @@ class SearchHttp {
 
   // 获取搜索建议
   static Future searchSuggest({required term}) async {
-    var res = await Request().get(Api.searchSuggest,
-        data: {'term': term, 'main_ver': 'v1', 'highlight': term});
+    var res = await Request().get(
+      Api.searchSuggest,
+      data: {'term': term, 'main_ver': 'v1', 'highlight': term},
+    );
     if (res.data is String) {
       Map<String, dynamic> resultMap = json.decode(res.data);
       if (resultMap['code'] == 0) {
@@ -77,19 +80,14 @@ class SearchHttp {
     int? duration,
     int? tids,
   }) async {
-    // 处理精准搜索
-    String searchKeyword = keyword;
-    String? searchOrder = order;
-    if (order == 'exact') {
-      searchKeyword = '"$keyword"';
-      searchOrder = null; // 精准搜索不需要额外的排序参数
-    }
-    
+    // 精准匹配：当 order=exact 时，用引号包裹关键词
+    String searchKeyword = (order == 'exact') ? '"$keyword"' : keyword;
+
     var reqData = {
       'search_type': searchType.type,
       'keyword': searchKeyword,
       'page': page,
-      if (searchOrder != null) 'order': searchOrder,
+      if (order != null && order != 'exact') 'order': order,
       if (duration != null) 'duration': duration,
       if (tids != null && tids != -1) 'tids': tids,
     };
@@ -99,7 +97,7 @@ class SearchHttp {
         // 我想返回数据，使得可以通过data.list 取值，结果为[]
         return {'status': true, 'data': Data()};
       }
-      Object? data;  // 修改：添加 ? 使其可为 null
+      Object data = Data();
       try {
         switch (searchType) {
           case SearchType.video:
@@ -122,9 +120,6 @@ class SearchHttp {
             break;
           case SearchType.article:
             data = SearchArticleModel.fromJson(res.data['data']);
-            break;
-          default:  // 添加 default 分支
-            data = Data();
             break;
         }
         return {
@@ -232,40 +227,3 @@ class Data {
 
   Data({this.list = const []});
 }
-
----
-
-## 📝 修改内容总结
-
-### 工作流文件：
-```diff
-- flutter-version: '3.19.6'
-+ flutter-version: '3.24.5'
-
-### search.dart：
-```diff
-- Object data;
-+ Object? data;  // 可为 null
-
-  switch (searchType) {
-    // ... cases ...
-+   default:
-+     data = Data();
-+     break;
-  }
-
----
-
-## 🚀 快速替换
-
-只需替换这 **2 个文件**：
-
-1. `.github/workflows/build_v8a.yml`
-2. `lib/http/search.dart`
-
-其他 3 个文件不变：
-- ✅ `lib/models/common/search_type.dart`
-- ✅ `lib/pages/search_panel/controller.dart`
-- ✅ `lib/pages/search_panel/widgets/video_panel.dart`
-
-**现在应该能编译成功了！** ✅

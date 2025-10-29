@@ -27,6 +27,12 @@ jobs:
           flutter-version: '3.24.5'
           channel: 'stable'
 
+      - name: Ensure Android SDK 36
+        shell: bash
+        run: |
+          SDKMANAGER="${ANDROID_SDK_ROOT:-$ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
+          yes | "${SDKMANAGER}" "platforms;android-36" || true
+
       - name: Get dependencies
         run: flutter pub get
 
@@ -56,12 +62,6 @@ jobs:
           mkdir -p output
           cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
              output/pilipala-v${{ steps.version.outputs.version }}-arm64-v8a.apk
-
-      - name: Show build info
-        run: |
-          echo "📦 APK built successfully!"
-          ls -lh output/
-          echo "✅ Size: $(du -h output/*.apk | cut -f1)"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
