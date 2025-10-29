@@ -1,3 +1,4 @@
+groovy
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
 if (localPropertiesFile.exists()) {
@@ -30,7 +31,6 @@ def _keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProperties["keyAlias"]
 def _keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProperties["keyPassword"]
 
 android {
-    // 对齐依赖最低编译要求 & aapt2 版本
     compileSdkVersion 36
     buildToolsVersion "34.0.0"
     ndkVersion flutter.ndkVersion
@@ -48,7 +48,7 @@ android {
     defaultConfig {
         applicationId "com.guozhigq.pilipala"
         minSdkVersion 21
-        targetSdkVersion flutter.targetSdkVersion
+        targetSdkVersion 36
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
