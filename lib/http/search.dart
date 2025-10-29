@@ -80,8 +80,8 @@ class SearchHttp {
     int? duration,
     int? tids,
   }) async {
-    // 精准匹配：当 order=exact 时，用引号包裹关键词
-    String searchKeyword = (order == 'exact') ? '"$keyword"' : keyword;
+    // B站不支持精准搜索，客户端自行筛选
+    String searchKeyword = keyword;
 
     var reqData = {
       'search_type': searchType.type,
