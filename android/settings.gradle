@@ -3,13 +3,12 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
-        // Flutter engine artifacts repository
         maven { url "https://storage.googleapis.com/download.flutter.io" }
     }
     plugins {
         id("org.jetbrains.kotlin.android") version "1.9.22"
-        id("com.android.application") version "8.2.1"
-        id("com.android.library") version "8.2.1"
+        id("com.android.application") version "7.4.2"
+        id("com.android.library") version "7.4.2"
     }
 }
 
@@ -18,7 +17,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // 必须加上，否则无法解析 io.flutter:arm64_v8a_release 等引擎构件
         maven { url "https://storage.googleapis.com/download.flutter.io" }
     }
 }

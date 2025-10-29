@@ -1,4 +1,8 @@
 buildscript {
+    // 在这里定义 ext 块，并声明变量
+    ext {
+        kotlin_version = '1.9.22'
+    }
     repositories {
         google()
         mavenCentral()
@@ -6,6 +10,7 @@ buildscript {
 
     dependencies {
         classpath 'com.android.tools.build:gradle:7.4.2'
+        // 现在这一行可以正确找到变量了
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
