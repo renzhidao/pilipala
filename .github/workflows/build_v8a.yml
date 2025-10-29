@@ -27,11 +27,11 @@ jobs:
           flutter-version: '3.24.5'
           channel: 'stable'
 
-      - name: Ensure Android SDK 36
+      - name: Ensure Android SDK 35
         shell: bash
         run: |
           SDKMANAGER="${ANDROID_SDK_ROOT:-$ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
-          yes | "${SDKMANAGER}" "platforms;android-36" || true
+          yes | "${SDKMANAGER}" "platforms;android-35" || true
 
       - name: Get dependencies
         run: flutter pub get

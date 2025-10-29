@@ -37,8 +37,8 @@ def _keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProperties["keyAlias"]
 def _keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProperties["keyPassword"]
 
 android {
-    // keep high to satisfy plugins
-    compileSdkVersion 36
+    // use SDK 35 to satisfy plugins and keep AGP 7.4.2 compatible
+    compileSdkVersion 35
     ndkVersion flutter.ndkVersion
 
     namespace "com.guozhigq.pilipala"
