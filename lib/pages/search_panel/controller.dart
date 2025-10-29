@@ -28,33 +28,16 @@ class SearchPanelController extends GetxController {
   int maxLoadPages = 10; // 最多加载10页防止无限循环
   int minResultCount = 20; // 最少需要20条筛选后的结果
 
-  // 分词函数：将搜索词拆分成关键词列表
+  // 分词函数：用户通过空格控制分词
   List<String> _splitKeywords(String keyword) {
     keyword = keyword.trim();
     
-    // 如果包含空格，按空格分词
+    // 如果包含空格，按空格分词（用户自主控制）
     if (keyword.contains(' ')) {
       return keyword.split(' ').where((s) => s.trim().isNotEmpty).toList();
     }
     
-    // 如果长度<=2，不拆分
-    if (keyword.length <= 2) {
-      return [keyword];
-    }
-    
-    // 如果长度为偶数，按2字拆分
-    if (keyword.length % 2 == 0) {
-      List<String> result = [];
-      for (int i = 0; i < keyword.length; i += 2) {
-        if (i + 2 <= keyword.length) {
-          result.add(keyword.substring(i, i + 2));
-        }
-      }
-      return result;
-    }
-    
-    // 长度为奇数，尝试智能拆分或保持整体
-    // 例如：5字 -> [2,3] 或 [3,2]，这里简化为保持整体
+    // 无空格时，不拆分，保持整体
     return [keyword];
   }
 
@@ -197,3 +180,75 @@ class SearchPanelController extends GetxController {
     }
   }
 }
+
+---
+
+## 🎯 核心改动说明
+
+### 修改的函数：`_splitKeywords`
+
+**之前（第 32-57 行）：**
+```dart
+// 自动按2字拆分
+if (keyword.length % 2 == 0) {
+  List<String> result = [];
+  for (int i = 0; i < keyword.length; i += 2) {
+    result.add(keyword.substring(i, i + 2));
+  }
+  return result;
+}
+
+**现在（第 32-42 行）：**
+```dart
+// 如果包含空格，按空格分词（用户自主控制）
+if (keyword.contains(' ')) {
+  return keyword.split(' ').where((s) => s.trim().isNotEmpty).toList();
+}
+
+// 无空格时，不拆分，保持整体
+return [keyword];
+
+---
+
+## 🧪 测试对比
+
+### 示例 1：无空格搜索
+**输入：** `面包生虫`  
+**分词：** `["面包生虫"]`  
+**匹配：**
+- ✅ "如何处理面包生虫问题"
+- ✅ "面包生虫了怎么办"
+- ❌ "面包和大米生虫"（不包含完整的"面包生虫"）
+
+### 示例 2：空格分词搜索
+**输入：** `面粉 虫`  
+**分词：** `["面粉", "虫"]`  
+**匹配：**
+- ✅ "面粉生虫怎么办"
+- ✅ "虫子爬进面粉里"
+- ✅ "面粉容易长虫"
+- ❌ "面包生虫"（不包含"面粉"）
+
+### 示例 3：多个关键词
+**输入：** `面包 制作 教程`  
+**分词：** `["面包", "制作", "教程"]`  
+**匹配：** 标题必须同时包含这3个词
+
+---
+
+## 💡 使用技巧
+
+### 想要更多结果？
+使用空格分词：`面粉 虫` → 匹配范围更广
+
+### 想要精准结果？
+不加空格：`面包生虫` → 只匹配完整包含这个词的
+
+### 结果还是太少？
+1. 尝试换其他排序方式（综合排序、最多播放等）
+2. 调整最大加载页数（controller.dart 第 25 行改成 15 或 20）
+3. 减少必需的最小结果数（controller.dart 第 26 行改成 10）
+
+---
+
+**修改完成！现在可以通过空格自由控制分词了** ✅

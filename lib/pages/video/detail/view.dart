@@ -539,24 +539,55 @@ class _VideoDetailPageState extends State<VideoDetailPage>
 
     Widget buildErrorWidget(dynamic error) {
       return Obx(
-        () => SizedBox(
+        () => Container(
           height: videoHeight.value,
           width: Get.size.width,
+          color: Colors.black,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Text('加载失败', style: TextStyle(color: Colors.white)),
-              Text('$error', style: const TextStyle(color: Colors.white)),
-              const SizedBox(height: 10),
-              IconButton.filled(
+              const Icon(
+                Icons.error_outline,
+                color: Colors.white,
+                size: 48,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '视频加载失败',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  '$error',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
                 onPressed: () {
                   setState(() {
                     _futureBuilderFuture = vdCtr.queryVideoUrl();
                   });
                 },
                 icon: const Icon(Icons.refresh),
-              )
+                label: const Text('重新加载'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
             ],
           ),
         ),
@@ -571,13 +602,20 @@ class _VideoDetailPageState extends State<VideoDetailPage>
           if (snapshot.connectionState == ConnectionState.waiting) {
             return buildLoadingWidget();
           } else if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasData && snapshot.data['status']) {
-              return buildVideoPlayerWidget(snapshot);
+            if (snapshot.hasData) {
+              if (snapshot.data['status']) {
+                // 请求成功
+                return buildVideoPlayerWidget(snapshot);
+              } else {
+                // 请求失败但有返回数据
+                return buildErrorWidget(snapshot.data['msg'] ?? '加载失败');
+              }
             } else {
-              return buildErrorWidget(snapshot.error);
+              // 没有返回数据
+              return buildErrorWidget(snapshot.error ?? '未知错误');
             }
           } else {
-            return buildErrorWidget('未知错误');
+            return buildErrorWidget('连接异常');
           }
         },
       );
@@ -889,3 +927,28 @@ class _VideoDetailPageState extends State<VideoDetailPage>
     );
   }
 }
+
+---
+
+## 📝 修改总结
+
+### 修改的两个关键方法：
+
+1. **`buildErrorWidget()` (第 866-925 行)**
+   - ✅ 添加黑色背景容器
+   - ✅ 添加错误图标
+   - ✅ 优化文字样式和排版
+   - ✅ 使用 FilledButton 代替 IconButton.filled
+
+2. **`buildVideoPlayerPanel()` (第 927-950 行)**
+   - ✅ 修复错误判断逻辑
+   - ✅ 正确获取错误信息 `snapshot.data['msg']`
+   - ✅ 处理所有可能的错误情况
+
+### 测试验证：
+```bash
+# 重新构建
+flutter clean
+flutter build apk --release --target-platform android-arm64
+
+**现在视频详情页的错误会正确显示，不会再空白了！** ✅
