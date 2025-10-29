@@ -99,7 +99,7 @@ class SearchHttp {
         // 我想返回数据，使得可以通过data.list 取值，结果为[]
         return {'status': true, 'data': Data()};
       }
-      Object data;
+      Object? data;  // 修改：添加 ? 使其可为 null
       try {
         switch (searchType) {
           case SearchType.video:
@@ -123,6 +123,9 @@ class SearchHttp {
           case SearchType.article:
             data = SearchArticleModel.fromJson(res.data['data']);
             break;
+          default:  // 添加 default 分支
+            data = Data();
+            break;
         }
         return {
           'status': true,
@@ -130,6 +133,11 @@ class SearchHttp {
         };
       } catch (err) {
         print(err);
+        return {
+          'status': false,
+          'data': [],
+          'msg': '解析错误',
+        };
       }
     } else {
       return {
@@ -224,3 +232,40 @@ class Data {
 
   Data({this.list = const []});
 }
+
+---
+
+## 📝 修改内容总结
+
+### 工作流文件：
+```diff
+- flutter-version: '3.19.6'
++ flutter-version: '3.24.5'
+
+### search.dart：
+```diff
+- Object data;
++ Object? data;  // 可为 null
+
+  switch (searchType) {
+    // ... cases ...
++   default:
++     data = Data();
++     break;
+  }
+
+---
+
+## 🚀 快速替换
+
+只需替换这 **2 个文件**：
+
+1. `.github/workflows/build_v8a.yml`
+2. `lib/http/search.dart`
+
+其他 3 个文件不变：
+- ✅ `lib/models/common/search_type.dart`
+- ✅ `lib/pages/search_panel/controller.dart`
+- ✅ `lib/pages/search_panel/widgets/video_panel.dart`
+
+**现在应该能编译成功了！** ✅
