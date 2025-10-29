@@ -1,12 +1,12 @@
 buildscript {
-    // Kotlin 升到 1.9.x，修复 “Kotlin metadata 1.9.0 expected 1.7.1” 报错
+    // 升级 Kotlin，修复 “Kotlin metadata 1.9.0 expected 1.7.1” 报错
     ext.kotlin_version = '1.9.22'
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        // 保持 AGP 7.4.2（避免 namespace 兼容问题）
+        // 保持 AGP 7.4.2，避免三方插件 namespace 兼容问题
         classpath 'com.android.tools.build:gradle:7.4.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
@@ -19,42 +19,12 @@ allprojects {
     }
 }
 
-// 统一配置给所有 Android 子模块（插件模块也一起用 SDK 36 / BT 34.0.0）
-ext {
-    androidCompileSdk = 36
-    androidBuildTools = "34.0.0"
-}
-
 rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
 subprojects {
     project.evaluationDependsOn(':app')
-}
-
-// 在插件应用时配置 android 扩展，避免 afterEvaluate 时机错误
-subprojects { Project p ->
-    plugins.withId('com.android.application') {
-        p.extensions.findByName('android')?.with {
-            compileSdkVersion rootProject.ext.androidCompileSdk
-            buildToolsVersion rootProject.ext.androidBuildTools
-            compileOptions {
-                sourceCompatibility JavaVersion.VERSION_1_8
-                targetCompatibility JavaVersion.VERSION_1_8
-            }
-        }
-    }
-    plugins.withId('com.android.library') {
-        p.extensions.findByName('android')?.with {
-            compileSdkVersion rootProject.ext.androidCompileSdk
-            buildToolsVersion rootProject.ext.androidBuildTools
-            compileOptions {
-                sourceCompatibility JavaVersion.VERSION_1_8
-                targetCompatibility JavaVersion.VERSION_1_8
-            }
-        }
-    }
 }
 
 tasks.register("clean", Delete) {

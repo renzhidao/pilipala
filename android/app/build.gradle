@@ -30,8 +30,8 @@ def _keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProperties["keyAlias"]
 def _keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProperties["keyPassword"]
 
 android {
-    // 统一到 SDK 36 + Build-Tools 34.0.0（满足依赖、解决 aapt2 不匹配）
-    compileSdkVersion 36
+    // 对齐依赖最低编译要求 & aapt2 版本
+    compileSdkVersion 34
     buildToolsVersion "34.0.0"
     ndkVersion flutter.ndkVersion
 

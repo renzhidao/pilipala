@@ -31,7 +31,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          COMPILE_SDK="$(grep -E '^\s*compileSdk(VERSION)?\s*[= ]\s*[0-9]+' -m1 android/app/build.gradle | grep -Eo '[0-9]+' | head -1 || echo 36)"
+          COMPILE_SDK="$(grep -E '^\s*compileSdk(VERSION)?\s*[= ]\s*[0-9]+' -m1 android/app/build.gradle | grep -Eo '[0-9]+' | head -1 || echo 34)"
           BUILD_TOOLS="$(grep -E '^\s*buildToolsVersion\s*"' -m1 android/app/build.gradle | sed -E 's/.*"([^"]+)".*/\1/' || echo 34.0.0)"
           echo "Detected compileSdkVersion=$COMPILE_SDK"
           echo "Detected buildToolsVersion=$BUILD_TOOLS"
