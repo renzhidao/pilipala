@@ -31,7 +31,7 @@ def _keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProperties["keyPassw
 
 android {
     // 对齐依赖最低编译要求 & aapt2 版本
-    compileSdkVersion 34
+    compileSdkVersion 36
     buildToolsVersion "34.0.0"
     ndkVersion flutter.ndkVersion
 

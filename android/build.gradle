@@ -1,12 +1,11 @@
 buildscript {
-    // 升级 Kotlin，修复 “Kotlin metadata 1.9.0 expected 1.7.1” 报错
     ext.kotlin_version = '1.9.22'
     repositories {
         google()
         mavenCentral()
     }
+
     dependencies {
-        // 保持 AGP 7.4.2，避免三方插件 namespace 兼容问题
         classpath 'com.android.tools.build:gradle:7.4.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
