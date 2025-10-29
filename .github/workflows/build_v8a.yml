@@ -27,40 +27,31 @@ jobs:
           flutter-version: '3.24.5'
           channel: stable
 
-      - name: Preflight | Auto-detect compileSdk & buildTools and install SDK components
+      - name: Preflight | install SDK platform & build-tools to match app/build.gradle
         shell: bash
         run: |
           set -e
-          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"
-          echo "ANDROID_HOME=${ANDROID_HOME}"
-
-          # Parse from app/build.gradle
-          COMPILE_SDK="$(grep -E '^\s*compileSdk(VERSION)?\s*[= ]\s*[0-9]+' -m1 android/app/build.gradle | grep -Eo '[0-9]+' | head -1 || true)"
-          BUILD_TOOLS="$(grep -E '^\s*buildToolsVersion\s*"' -m1 android/app/build.gradle | sed -E 's/.*"([^"]+)".*/\1/' || true)"
-          if [ -z "$COMPILE_SDK" ]; then COMPILE_SDK=34; fi
-          if [ -z "$BUILD_TOOLS" ]; then BUILD_TOOLS=34.0.0; fi
+          COMPILE_SDK="$(grep -E '^\s*compileSdk(VERSION)?\s*[= ]\s*[0-9]+' -m1 android/app/build.gradle | grep -Eo '[0-9]+' | head -1 || echo 36)"
+          BUILD_TOOLS="$(grep -E '^\s*buildToolsVersion\s*"' -m1 android/app/build.gradle | sed -E 's/.*"([^"]+)".*/\1/' || echo 34.0.0)"
           echo "Detected compileSdkVersion=$COMPILE_SDK"
           echo "Detected buildToolsVersion=$BUILD_TOOLS"
 
-          # Ensure sdkmanager exists
+          # Ensure cmdline-tools
           if [ -x "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" ]; then
             SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
-          elif [ -x "${ANDROID_SDK_ROOT}/cmdline-tools/bin/sdkmanager" ]; then
-            SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/bin/sdkmanager"
           else
-            echo "::group::Install cmdline-tools;latest"
             mkdir -p "${ANDROID_SDK_ROOT}/cmdline-tools"
             curl -sSL https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -o /tmp/cmdtools.zip
             unzip -q /tmp/cmdtools.zip -d /tmp/cmdtools
             mv /tmp/cmdtools/cmdline-tools "${ANDROID_SDK_ROOT}/cmdline-tools/latest"
             SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
-            echo "::endgroup::"
           fi
 
           yes | "${SDKMANAGER}" --sdk_root="${ANDROID_SDK_ROOT}" --licenses || true
-          yes | "${SDKMANAGER}" --sdk_root="${ANDROID_SDK_ROOT}" "platform-tools" "platforms;android-${COMPILE_SDK}" "build-tools;${BUILD_TOOLS}" || true
+          yes | "${SDKMANAGER}" --sdk_root="${ANDROID_SDK_ROOT}" "platform-tools" \
+            "platforms;android-${COMPILE_SDK}" "build-tools;${BUILD_TOOLS}" || true
 
-          echo "::group::Installed platforms & build-tools"
+          echo "::group::Installed SDK"
           ls -la "${ANDROID_SDK_ROOT}/platforms" || true
           ls -la "${ANDROID_SDK_ROOT}/build-tools" || true
           echo "::endgroup::"
@@ -76,8 +67,6 @@ jobs:
               -storepass temp123456 -keypass temp123456 \
               -alias tempkey \
               -dname "CN=Temp, OU=Temp, O=Temp, L=Temp, S=Temp, C=US"
-          else
-            echo "Keystore exists, skip."
           fi
 
       - name: Build APK (arm64-v8a only)
