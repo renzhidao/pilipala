@@ -1,3 +1,4 @@
+
 name: pilipala
 description: A new Flutter project.
 publish_to: "none"
@@ -14,9 +15,7 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.5
-  # 固定主版本，具体补丁用 overrides 锁定
   dynamic_color: ^1.7.0
-
   get: ^4.6.5
 
   # 网络
@@ -62,10 +61,10 @@ dependencies:
   crypto: ^3.0.3
   encrypt: ^5.0.3
 
-  # 视频播放器（固定到与 36 兼容且稳定的组合）
-  media_kit: 1.1.10
-  media_kit_video: 1.2.4
-  media_kit_libs_video: 1.0.4
+  # 视频播放器（保持声明，具体版本由 overrides 指向 Git 源）
+  media_kit: any
+  media_kit_video: any
+  media_kit_libs_video: any
 
   # 媒体通知
   audio_service: ^0.18.13
@@ -123,7 +122,22 @@ dev_dependencies:
   hive_generator: ^2.0.0
   build_runner: ^2.4.8
 
-# 修兼容性：Flutter 3.24.x 没有 Color.toARGB32 / withValues / a
+# 兼容性覆盖 + 媒体内核用 Git 源（包含你代码使用的 Media(start: ...) 新参数）
 dependency_overrides:
   dynamic_color: 1.6.9
   font_awesome_flutter: 10.7.0
+  media_kit:
+    git:
+      url: https://github.com/media-kit/media-kit
+      ref: 285f7919bbf4a7d89a62615b14a3766a171ad575
+      path: media_kit
+  media_kit_video:
+    git:
+      url: https://github.com/media-kit/media-kit
+      ref: 285f7919bbf4a7d89a62615b14a3766a171ad575
+      path: media_kit_video
+  media_kit_libs_video:
+    git:
+      url: https://github.com/media-kit/media-kit
+      ref: 285f7919bbf4a7d89a62615b14a3766a171ad575
+      path: libs/universal/media_kit_libs_video
