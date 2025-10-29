@@ -1,53 +1,64 @@
-class SearchType {
-  final String type;
-  final String label;
-  const SearchType(this.type, this.label);
-
-  static const video = SearchType('video', '视频');
-  static const media_bangumi = SearchType('media_bangumi', '番剧');
-  static const media_ft = SearchType('media_ft', '影视');
-  static const live_room = SearchType('live_room', '直播');
-  static const bili_user = SearchType('bili_user', 'UP主');
-  static const article = SearchType('article', '专栏');
-
-  static const values = [
-    video,
-    media_bangumi,
-    media_ft,
-    live_room,
-    bili_user,
-    article,
-  ];
+// ignore_for_file: constant_identifier_names
+enum SearchType {
+  // 视频：video
+  video,
+  // 番剧：media_bangumi,
+  media_bangumi,
+  // 影视：media_ft
+  // media_ft,
+  // 直播间及主播：live
+  // live,
+  // 直播间：live_room
+  live_room,
+  // 主播：live_user
+  // live_user,
+  // 话题：topic
+  // topic,
+  // 用户：bili_user
+  bili_user,
+  // 专栏：article
+  article,
+  // 相簿：photo
+  // photo
 }
 
+extension SearchTypeExtension on SearchType {
+  String get type =>
+      ['video', 'media_bangumi', 'live_room', 'bili_user', 'article'][index];
+  String get label => ['视频', '番剧', '直播间', '用户', '专栏'][index];
+}
+
+// 搜索类型为视频时
 enum ArchiveFilterType {
-  exact,        // 精准匹配
-  totalrank,    // 综合排序
-  click,        // 最多播放
-  pubdate,      // 最新发布
-  dm,           // 最多弹幕
-  stow;         // 最多收藏
-
-  String get description => switch (this) {
-    ArchiveFilterType.exact => '精准',
-    ArchiveFilterType.totalrank => '综合排序',
-    ArchiveFilterType.click => '最多播放',
-    ArchiveFilterType.pubdate => '最新发布',
-    ArchiveFilterType.dm => '最多弹幕',
-    ArchiveFilterType.stow => '最多收藏',
-  };
+  totalrank,
+  click,
+  pubdate,
+  dm,
+  stow,
+  scores,
+  // 专栏
+  // attention,
 }
 
-enum ArticleFilterType {
-  totalrank,    // 综合排序
-  click,        // 最多阅读
-  pubdate,      // 最新发布
-  attention;    // 最多喜欢
+extension ArchiveFilterTypeExtension on ArchiveFilterType {
+  String get description =>
+      ['默认排序', '播放多', '新发布', '弹幕多', '收藏多', '评论多', '最多喜欢'][index];
+}
 
-  String get description => switch (this) {
-    ArticleFilterType.totalrank => '综合排序',
-    ArticleFilterType.click => '最多阅读',
-    ArticleFilterType.pubdate => '最新发布',
-    ArticleFilterType.attention => '最多喜欢',
-  };
+// 搜索类型为专栏时
+enum ArticleFilterType {
+  // 综合排序
+  totalrank,
+  // 最新发布
+  pubdate,
+  // 最多点击
+  click,
+  // 最多喜欢
+  attention,
+  // 最多评论
+  scores,
+}
+
+extension ArticleFilterTypeExtension on ArticleFilterType {
+  String get description => ['综合排序', '最新发布', '最多点击', '最多喜欢', '最多评论'][index];
 }

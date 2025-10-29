@@ -539,55 +539,24 @@ class _VideoDetailPageState extends State<VideoDetailPage>
 
     Widget buildErrorWidget(dynamic error) {
       return Obx(
-        () => Container(
+        () => SizedBox(
           height: videoHeight.value,
           width: Get.size.width,
-          color: Colors.black,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.error_outline,
-                color: Colors.white,
-                size: 48,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                '视频加载失败',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Text(
-                  '$error',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(height: 24),
-              FilledButton.icon(
+              const Text('加载失败', style: TextStyle(color: Colors.white)),
+              Text('$error', style: const TextStyle(color: Colors.white)),
+              const SizedBox(height: 10),
+              IconButton.filled(
                 onPressed: () {
                   setState(() {
                     _futureBuilderFuture = vdCtr.queryVideoUrl();
                   });
                 },
                 icon: const Icon(Icons.refresh),
-                label: const Text('重新加载'),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-              ),
+              )
             ],
           ),
         ),
@@ -602,20 +571,13 @@ class _VideoDetailPageState extends State<VideoDetailPage>
           if (snapshot.connectionState == ConnectionState.waiting) {
             return buildLoadingWidget();
           } else if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasData) {
-              if (snapshot.data['status']) {
-                // 请求成功
-                return buildVideoPlayerWidget(snapshot);
-              } else {
-                // 请求失败但有返回数据
-                return buildErrorWidget(snapshot.data['msg'] ?? '加载失败');
-              }
+            if (snapshot.hasData && snapshot.data['status']) {
+              return buildVideoPlayerWidget(snapshot);
             } else {
-              // 没有返回数据
-              return buildErrorWidget(snapshot.error ?? '未知错误');
+              return buildErrorWidget(snapshot.error);
             }
           } else {
-            return buildErrorWidget('连接异常');
+            return buildErrorWidget('未知错误');
           }
         },
       );

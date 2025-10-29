@@ -56,13 +56,9 @@ class _SearchPanelState extends State<SearchPanel>
     scrollController.addListener(() async {
       if (scrollController.position.pixels >=
           scrollController.position.maxScrollExtent - 100) {
-        // 防止重复触发
-        if (!_searchPanelController.isLoading.value && 
-            _searchPanelController.hasMore.value) {
-          EasyThrottle.throttle('search_load_more', const Duration(seconds: 1), () {
-            _searchPanelController.onSearch(type: 'onLoad');
-          });
-        }
+        EasyThrottle.throttle('history', const Duration(seconds: 1), () {
+          _searchPanelController.onSearch(type: 'onLoad');
+        });
       }
     });
     _futureBuilderFuture = _searchPanelController.onSearch();

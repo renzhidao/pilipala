@@ -12,7 +12,6 @@ import 'index.dart';
 
 class SearchHttp {
   static Box setting = GStrorage.setting;
-
   static Future hotSearchList() async {
     var res = await Request().get(Api.hotSearchList);
     if (res.data is String) {
@@ -39,10 +38,8 @@ class SearchHttp {
 
   // 获取搜索建议
   static Future searchSuggest({required term}) async {
-    var res = await Request().get(
-      Api.searchSuggest,
-      data: {'term': term, 'main_ver': 'v1', 'highlight': term},
-    );
+    var res = await Request().get(Api.searchSuggest,
+        data: {'term': term, 'main_ver': 'v1', 'highlight': term});
     if (res.data is String) {
       Map<String, dynamic> resultMap = json.decode(res.data);
       if (resultMap['code'] == 0) {
@@ -80,14 +77,13 @@ class SearchHttp {
     int? duration,
     int? tids,
   }) async {
-    // B站不支持精准搜索，客户端自行筛选
-    String searchKeyword = keyword;
-
     var reqData = {
       'search_type': searchType.type,
-      'keyword': searchKeyword,
+      'keyword': keyword,
+      // 'order_sort': 0,
+      // 'user_type': 0,
       'page': page,
-      if (order != null && order != 'exact') 'order': order,
+      if (order != null) 'order': order,
       if (duration != null) 'duration': duration,
       if (tids != null && tids != -1) 'tids': tids,
     };
@@ -97,7 +93,7 @@ class SearchHttp {
         // 我想返回数据，使得可以通过data.list 取值，结果为[]
         return {'status': true, 'data': Data()};
       }
-      Object data = Data();
+      Object data;
       try {
         switch (searchType) {
           case SearchType.video:
@@ -128,11 +124,6 @@ class SearchHttp {
         };
       } catch (err) {
         print(err);
-        return {
-          'status': false,
-          'data': [],
-          'msg': '解析错误',
-        };
       }
     } else {
       return {
