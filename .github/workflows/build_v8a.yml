@@ -24,37 +24,9 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.5'
+          flutter-version: '3.19.6'
           channel: stable
-
-      - name: Preflight | install SDK platform & build-tools to match app/build.gradle
-        shell: bash
-        run: |
-          set -e
-          COMPILE_SDK="$(grep -E '^\s*compileSdk(VERSION)?\s*[= ]\s*[0-9]+' -m1 android/app/build.gradle | grep -Eo '[0-9]+' | head -1 || echo 34)"
-          BUILD_TOOLS="$(grep -E '^\s*buildToolsVersion\s*"' -m1 android/app/build.gradle | sed -E 's/.*"([^"]+)".*/\1/' || echo 34.0.0)"
-          echo "Detected compileSdkVersion=$COMPILE_SDK"
-          echo "Detected buildToolsVersion=$BUILD_TOOLS"
-
-          # Ensure cmdline-tools
-          if [ -x "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" ]; then
-            SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
-          else
-            mkdir -p "${ANDROID_SDK_ROOT}/cmdline-tools"
-            curl -sSL https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -o /tmp/cmdtools.zip
-            unzip -q /tmp/cmdtools.zip -d /tmp/cmdtools
-            mv /tmp/cmdtools/cmdline-tools "${ANDROID_SDK_ROOT}/cmdline-tools/latest"
-            SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
-          fi
-
-          yes | "${SDKMANAGER}" --sdk_root="${ANDROID_SDK_ROOT}" --licenses || true
-          yes | "${SDKMANAGER}" --sdk_root="${ANDROID_SDK_ROOT}" "platform-tools" \
-            "platforms;android-${COMPILE_SDK}" "build-tools;${BUILD_TOOLS}" || true
-
-          echo "::group::Installed SDK"
-          ls -la "${ANDROID_SDK_ROOT}/platforms" || true
-          ls -la "${ANDROID_SDK_ROOT}/build-tools" || true
-          echo "::endgroup::"
+          cache: true
 
       - name: Flutter pub get
         run: flutter pub get
