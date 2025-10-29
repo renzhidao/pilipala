@@ -27,11 +27,13 @@ jobs:
           flutter-version: '3.24.5'
           channel: 'stable'
 
-      - name: Ensure Android SDK 35
+      # 关键：同时安装平台 36 和新 aapt2（build-tools 34）
+      - name: Prepare Android SDK (platform 36 + build-tools 34.0.0)
         shell: bash
         run: |
           SDKMANAGER="${ANDROID_SDK_ROOT:-$ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
-          yes | "${SDKMANAGER}" "platforms;android-35" || true
+          yes | "${SDKMANAGER}" --licenses || true
+          yes | "${SDKMANAGER}" "platforms;android-36" "build-tools;34.0.0" || true
 
       - name: Get dependencies
         run: flutter pub get

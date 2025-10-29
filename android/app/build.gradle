@@ -37,8 +37,10 @@ def _keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProperties["keyAlias"]
 def _keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProperties["keyPassword"]
 
 android {
-    // use SDK 35 to satisfy plugins and keep AGP 7.4.2 compatible
-    compileSdkVersion 35
+    // 为满足 media_kit_libs_android_video 要求，使用 36
+    compileSdkVersion 36
+    // 关键：指定较新的 aapt2（与 workflow 一致）
+    buildToolsVersion "34.0.0"
     ndkVersion flutter.ndkVersion
 
     namespace "com.guozhigq.pilipala"
