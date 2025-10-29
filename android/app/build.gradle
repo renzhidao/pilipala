@@ -37,7 +37,7 @@ def _keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProperties["keyAlias"]
 def _keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProperties["keyPassword"]
 
 android {
-    // 为满足部分插件的要求，强制使用较新的 compileSdk
+    // keep high to satisfy plugins
     compileSdkVersion 36
     ndkVersion flutter.ndkVersion
 
@@ -66,9 +66,7 @@ android {
     }
 
     signingConfigs {
-        // 添加签名配置
         release {
-            // 配置密钥库文件的位置、别名、密码等信息
             storeFile _storeFile
             storePassword _storePassword
             keyAlias _keyAlias

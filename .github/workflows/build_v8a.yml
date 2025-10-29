@@ -36,7 +36,7 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Generate keystore (exactly like original project)
+      - name: Generate keystore (like original project)
         run: |
           keytool -genkey -v -keystore android/app/vvex.jks \
             -keyalg RSA -keysize 2048 -validity 10000 \
