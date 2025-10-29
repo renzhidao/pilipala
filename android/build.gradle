@@ -1,16 +1,18 @@
 buildscript {
-    // 在这里定义 ext 块，并声明变量
     ext {
         kotlin_version = '1.9.22'
+        // 下面三项可选，但推荐有，方便插件统一继承（不会破坏 app 模块的显式设置）
+        compileSdkVersion = 34
+        buildToolsVersion = '34.0.0'
+        minSdkVersion = 21
+        targetSdkVersion = 34
     }
     repositories {
         google()
         mavenCentral()
     }
-
     dependencies {
         classpath 'com.android.tools.build:gradle:7.4.2'
-        // 现在这一行可以正确找到变量了
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -19,6 +21,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url "https://storage.googleapis.com/download.flutter.io" }
     }
 }
 

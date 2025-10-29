@@ -139,6 +139,12 @@ dependency_overrides:
       url: https://github.com/media-kit/media-kit
       ref: 285f7919bbf4a7d89a62615b14a3766a171ad575
       path: libs/universal/media_kit_libs_video
+  # 新增：强制 Android 侧使用不会要求 SDK 36 的版本
+  media_kit_libs_android_video:
+    git:
+      url: https://github.com/media-kit/media-kit
+      ref: 285f7919bbf4a7d89a62615b14a3766a171ad575
+      path: libs/android/media_kit_libs_android_video
 
 flutter:
   uses-material-design: true

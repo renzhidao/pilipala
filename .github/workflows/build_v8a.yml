@@ -21,12 +21,30 @@ jobs:
           distribution: zulu
           java-version: 17
 
+      - name: Preflight Android SDK (install platform 34 + build-tools 34.0.0)
+        shell: bash
+        run: |
+          ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            yes | "$ANDROID_SDK_ROOT/cmdline-tools/bin/sdkmanager" --install "cmdline-tools;11.0" || true
+            SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          fi
+          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+          yes | "$SDKMANAGER" "platforms;android-34" "build-tools;34.0.0" "platform-tools" >/dev/null
+          "$ANDROID_SDK_ROOT/platform-tools/adb" version || true
+          ls -al "$ANDROID_SDK_ROOT/platforms" || true
+          ls -al "$ANDROID_SDK_ROOT/build-tools" || true
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.6'
           channel: stable
           cache: true
+
+      - name: Flutter clean
+        run: flutter clean
 
       - name: Flutter pub get
         run: flutter pub get
