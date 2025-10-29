@@ -1,0 +1,71 @@
+name: Build APK (arm64-v8a only)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Generate keystore (exactly like original project)
+        run: |
+          keytool -genkey -v -keystore android/app/vvex.jks \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass temp123456 -keypass temp123456 \
+            -alias tempkey \
+            -dname "CN=Temp, OU=Temp, O=Temp, L=Temp, S=Temp, C=US"
+
+      - name: Build APK (arm64-v8a only)
+        run: flutter build apk --release --target-platform android-arm64
+        env:
+          KEYSTORE_PASSWORD: temp123456
+          KEY_ALIAS: tempkey
+          KEY_PASSWORD: temp123456
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(grep "^version:" pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Rename APK
+        run: |
+          mkdir -p output
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+             output/pilipala-v${{ steps.version.outputs.version }}-arm64-v8a.apk
+
+      - name: Show build info
+        run: |
+          echo "📦 APK built successfully!"
+          ls -lh output/
+          echo "✅ Size: $(du -h output/*.apk | cut -f1)"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: pilipala-arm64-v8a
+          path: output/*.apk
+          if-no-files-found: error
