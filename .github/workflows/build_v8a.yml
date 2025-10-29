@@ -24,23 +24,20 @@ jobs:
       - name: Preflight Android SDK (install platform 34 + build-tools 34.0.0)
         shell: bash
         run: |
-          set +e  # 临时禁用 exit on error
+          set +e
           
           ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}
           SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
           
-          # 接受许可证（忽略管道错误）
           ( yes 2>/dev/null || true ) | "$SDKMANAGER" --licenses >/dev/null 2>&1
           
-          # 安装所需组件
           "$SDKMANAGER" --install \
             "platforms;android-34" \
             "build-tools;34.0.0" \
             "platform-tools" >/dev/null 2>&1
           
-          set -e  # 重新启用 exit on error
+          set -e
           
-          # 验证安装
           echo "=== Installed Android platforms ==="
           ls -la "$ANDROID_SDK_ROOT/platforms/" 2>/dev/null || echo "(none)"
           echo ""
@@ -86,7 +83,7 @@ jobs:
       - name: Rename APK
         run: |
           mkdir -p output
-          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+          cp build/app/outputs/flutter-apk/app-release.apk \
              output/pilipala-v${{ steps.version.outputs.version }}-arm64-v8a.apk
 
       - name: Upload APK
