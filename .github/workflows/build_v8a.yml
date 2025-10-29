@@ -37,8 +37,8 @@ jobs:
           # Parse from app/build.gradle
           COMPILE_SDK="$(grep -E '^\s*compileSdk(VERSION)?\s*[= ]\s*[0-9]+' -m1 android/app/build.gradle | grep -Eo '[0-9]+' | head -1 || true)"
           BUILD_TOOLS="$(grep -E '^\s*buildToolsVersion\s*"' -m1 android/app/build.gradle | sed -E 's/.*"([^"]+)".*/\1/' || true)"
-          if [ -z "$COMPILE_SDK" ]; then COMPILE_SDK=33; fi
-          if [ -z "$BUILD_TOOLS" ]; then BUILD_TOOLS=30.0.3; fi
+          if [ -z "$COMPILE_SDK" ]; then COMPILE_SDK=34; fi
+          if [ -z "$BUILD_TOOLS" ]; then BUILD_TOOLS=34.0.0; fi
           echo "Detected compileSdkVersion=$COMPILE_SDK"
           echo "Detected buildToolsVersion=$BUILD_TOOLS"
 
