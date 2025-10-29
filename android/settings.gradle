@@ -8,13 +8,13 @@ pluginManagement {
     }
     plugins {
         id("org.jetbrains.kotlin.android") version "1.9.22"
-        id("com.android.application") version "7.4.2"
-        id("com.android.library") version "7.4.2"
+        id("com.android.application") version "8.2.1"
+        id("com.android.library") version "8.2.1"
     }
 }
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositoriesMode=RepositoriesMode.PREFER_SETTINGS
     repositories {
         google()
         mavenCentral()
@@ -26,7 +26,6 @@ dependencyResolutionManagement {
 rootProject.name = "android"
 include(":app")
 
-//  ↓↓↓  这是唯一且关键的补充，用于加载Flutter引擎和所有插件  ↓↓↓
 apply from: new File(
   settings.hasProperty('flutter.sdk')
     ? settings.flutter.sdk + '/packages/flutter_tools/gradle/app_plugin_loader.gradle'
