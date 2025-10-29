@@ -13,7 +13,7 @@ class SearchPanelController extends GetxController {
   RxInt page = 1.obs;
   RxList resultList = [].obs;
   // 结果排序方式 搜索类型为视频、专栏及相簿时
-  RxString order = ''.obs;
+  RxString order = 'exact'.obs; // 默认为精准搜索
   // 视频时长筛选 仅用于搜索视频
   RxInt duration = 0.obs;
   // 视频分区筛选 仅用于搜索视频 -1时不传

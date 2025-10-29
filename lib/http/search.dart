@@ -77,13 +77,19 @@ class SearchHttp {
     int? duration,
     int? tids,
   }) async {
+    // 处理精准搜索
+    String searchKeyword = keyword;
+    String? searchOrder = order;
+    if (order == 'exact') {
+      searchKeyword = '"$keyword"';
+      searchOrder = null; // 精准搜索不需要额外的排序参数
+    }
+    
     var reqData = {
       'search_type': searchType.type,
-      'keyword': keyword,
-      // 'order_sort': 0,
-      // 'user_type': 0,
+      'keyword': searchKeyword,
       'page': page,
-      if (order != null) 'order': order,
+      if (searchOrder != null) 'order': searchOrder,
       if (duration != null) 'duration': duration,
       if (tids != null && tids != -1) 'tids': tids,
     };

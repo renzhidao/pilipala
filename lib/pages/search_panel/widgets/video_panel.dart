@@ -61,13 +61,6 @@ class SearchVideoPanel extends StatelessWidget {
           width: double.infinity,
           height: 36,
           padding: const EdgeInsets.only(left: 8, top: 0, right: 12),
-          // decoration: BoxDecoration(
-          //   border: Border(
-          //     bottom: BorderSide(
-          //       color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-          //     ),
-          //   ),
-          // ),
           child: Row(
             children: [
               Expanded(
@@ -75,7 +68,6 @@ class SearchVideoPanel extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   child: Obx(
                     () => Wrap(
-                      // spacing: ,
                       children: [
                         for (var i in controller.filterList) ...[
                           CustomFilterChip(
@@ -116,7 +108,7 @@ class SearchVideoPanel extends StatelessWidget {
               ),
             ],
           ),
-        ), // 放置在ListView.builder()上方的组件
+        ),
       ],
     );
   }
@@ -157,8 +149,6 @@ class CustomFilterChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         selectedColor: Colors.transparent,
-        // backgroundColor:
-        //     Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
         backgroundColor: Colors.transparent,
         side: BorderSide.none,
         onSelected: (bool selected) => callFn!(selected),
@@ -169,7 +159,8 @@ class CustomFilterChip extends StatelessWidget {
 
 class VideoPanelController extends GetxController {
   RxList<Map> filterList = [{}].obs;
-  Rx<ArchiveFilterType> selectedType = ArchiveFilterType.values.first.obs;
+  Rx<ArchiveFilterType> selectedType = ArchiveFilterType.exact.obs; // 默认选中精准搜索
+  
   List<Map<String, dynamic>> timeFiltersList = [
     {'label': '全部时长', 'value': 0},
     {'label': '0-10分钟', 'value': 1},
