@@ -1,11 +1,12 @@
 buildscript {
-    ext.kotlin_version = '1.8.22'
+    // 升级到 Kotlin 1.9.x，匹配 androidx/插件依赖的 1.9 元数据，修复 “expected 1.7.1 / Kotlin metadata” 报错
+    ext.kotlin_version = '1.9.22'
     repositories {
         google()
         mavenCentral()
     }
-
     dependencies {
+        // 保持 AGP 7.4.2，不触发三方插件 namespace 问题
         classpath 'com.android.tools.build:gradle:7.4.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
@@ -24,6 +25,30 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(':app')
+}
+
+// 强制所有 Android 子模块统一使用 compileSdk 34 & build-tools 34.0.0，
+// 修复子模块仍用旧 aapt2（30.0.3）导致的 lStar 等资源链接报错
+subprojects {
+    afterEvaluate { Project p ->
+        if (p.plugins.hasPlugin('com.android.application') || p.plugins.hasPlugin('com.android.library')) {
+            def androidExt = p.extensions.findByName('android')
+            if (androidExt != null) {
+                try {
+                    androidExt.compileSdkVersion 34
+                } catch (Throwable ignored) {}
+                try {
+                    androidExt.buildToolsVersion = "34.0.0"
+                } catch (Throwable ignored) {}
+                try {
+                    androidExt.compileOptions {
+                        sourceCompatibility JavaVersion.VERSION_1_8
+                        targetCompatibility JavaVersion.VERSION_1_8
+                    }
+                } catch (Throwable ignored) {}
+            }
+        }
+    }
 }
 
 tasks.register("clean", Delete) {
