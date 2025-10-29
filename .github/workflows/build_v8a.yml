@@ -1,4 +1,4 @@
-name: Build APK (arm64-v8a only)
+name: Build APK (arm64-v8a only, preflight auto-setup)
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,33 +18,67 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: zulu
+          java-version: 17
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.5'
-          channel: 'stable'
+          channel: stable
 
-      # 关键：同时安装平台 36 和新 aapt2（build-tools 34）
-      - name: Prepare Android SDK (platform 36 + build-tools 34.0.0)
+      - name: Preflight | Auto-detect compileSdk & buildTools and install SDK components
         shell: bash
         run: |
-          SDKMANAGER="${ANDROID_SDK_ROOT:-$ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
-          yes | "${SDKMANAGER}" --licenses || true
-          yes | "${SDKMANAGER}" "platforms;android-36" "build-tools;34.0.0" || true
+          set -e
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"
+          echo "ANDROID_HOME=${ANDROID_HOME}"
 
-      - name: Get dependencies
+          # Parse from app/build.gradle
+          COMPILE_SDK="$(grep -E '^\s*compileSdk(VERSION)?\s*[= ]\s*[0-9]+' -m1 android/app/build.gradle | grep -Eo '[0-9]+' | head -1 || true)"
+          BUILD_TOOLS="$(grep -E '^\s*buildToolsVersion\s*"' -m1 android/app/build.gradle | sed -E 's/.*"([^"]+)".*/\1/' || true)"
+          if [ -z "$COMPILE_SDK" ]; then COMPILE_SDK=33; fi
+          if [ -z "$BUILD_TOOLS" ]; then BUILD_TOOLS=30.0.3; fi
+          echo "Detected compileSdkVersion=$COMPILE_SDK"
+          echo "Detected buildToolsVersion=$BUILD_TOOLS"
+
+          # Ensure sdkmanager exists
+          if [ -x "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" ]; then
+            SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
+          elif [ -x "${ANDROID_SDK_ROOT}/cmdline-tools/bin/sdkmanager" ]; then
+            SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/bin/sdkmanager"
+          else
+            echo "::group::Install cmdline-tools;latest"
+            mkdir -p "${ANDROID_SDK_ROOT}/cmdline-tools"
+            curl -sSL https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -o /tmp/cmdtools.zip
+            unzip -q /tmp/cmdtools.zip -d /tmp/cmdtools
+            mv /tmp/cmdtools/cmdline-tools "${ANDROID_SDK_ROOT}/cmdline-tools/latest"
+            SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
+            echo "::endgroup::"
+          fi
+
+          yes | "${SDKMANAGER}" --sdk_root="${ANDROID_SDK_ROOT}" --licenses || true
+          yes | "${SDKMANAGER}" --sdk_root="${ANDROID_SDK_ROOT}" "platform-tools" "platforms;android-${COMPILE_SDK}" "build-tools;${BUILD_TOOLS}" || true
+
+          echo "::group::Installed platforms & build-tools"
+          ls -la "${ANDROID_SDK_ROOT}/platforms" || true
+          ls -la "${ANDROID_SDK_ROOT}/build-tools" || true
+          echo "::endgroup::"
+
+      - name: Flutter pub get
         run: flutter pub get
 
-      - name: Generate keystore (like original project)
+      - name: Generate keystore (if missing)
         run: |
-          keytool -genkey -v -keystore android/app/vvex.jks \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass temp123456 -keypass temp123456 \
-            -alias tempkey \
-            -dname "CN=Temp, OU=Temp, O=Temp, L=Temp, S=Temp, C=US"
+          if [ ! -f android/app/vvex.jks ]; then
+            keytool -genkey -v -keystore android/app/vvex.jks \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass temp123456 -keypass temp123456 \
+              -alias tempkey \
+              -dname "CN=Temp, OU=Temp, O=Temp, L=Temp, S=Temp, C=US"
+          else
+            echo "Keystore exists, skip."
+          fi
 
       - name: Build APK (arm64-v8a only)
         run: flutter build apk --release --target-platform android-arm64

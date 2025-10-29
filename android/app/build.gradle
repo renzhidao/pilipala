@@ -37,10 +37,9 @@ def _keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProperties["keyAlias"]
 def _keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProperties["keyPassword"]
 
 android {
-    // 为满足 media_kit_libs_android_video 要求，使用 36
-    compileSdkVersion 36
-    // 关键：指定较新的 aapt2（与 workflow 一致）
-    buildToolsVersion "34.0.0"
+    // 与 Build-Tools 30.0.3 对齐，避免 aapt2 与 platform 不匹配
+    compileSdkVersion 33
+    buildToolsVersion "30.0.3"
     ndkVersion flutter.ndkVersion
 
     namespace "com.guozhigq.pilipala"
