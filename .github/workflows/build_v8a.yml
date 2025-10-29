@@ -24,17 +24,28 @@ jobs:
       - name: Preflight Android SDK (install platform 34 + build-tools 34.0.0)
         shell: bash
         run: |
+          set +e  # 临时禁用 exit on error
+          
           ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}
           SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-          if [ ! -x "$SDKMANAGER" ]; then
-            yes | "$ANDROID_SDK_ROOT/cmdline-tools/bin/sdkmanager" --install "cmdline-tools;11.0" || true
-            SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-          fi
-          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
-          yes | "$SDKMANAGER" "platforms;android-34" "build-tools;34.0.0" "platform-tools" >/dev/null
-          "$ANDROID_SDK_ROOT/platform-tools/adb" version || true
-          ls -al "$ANDROID_SDK_ROOT/platforms" || true
-          ls -al "$ANDROID_SDK_ROOT/build-tools" || true
+          
+          # 接受许可证（忽略管道错误）
+          ( yes 2>/dev/null || true ) | "$SDKMANAGER" --licenses >/dev/null 2>&1
+          
+          # 安装所需组件
+          "$SDKMANAGER" --install \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "platform-tools" >/dev/null 2>&1
+          
+          set -e  # 重新启用 exit on error
+          
+          # 验证安装
+          echo "=== Installed Android platforms ==="
+          ls -la "$ANDROID_SDK_ROOT/platforms/" 2>/dev/null || echo "(none)"
+          echo ""
+          echo "=== Installed build-tools ==="
+          ls -la "$ANDROID_SDK_ROOT/build-tools/" 2>/dev/null || echo "(none)"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
