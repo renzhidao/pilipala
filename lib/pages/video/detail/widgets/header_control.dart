@@ -1,3 +1,4 @@
+
 import 'dart:io';
 
 import 'package:floating/floating.dart';
@@ -68,8 +69,14 @@ class _HeaderControlState extends State<HeaderControl> {
     speedsList = widget.controller!.speedsList;
     fullScreenStatusListener();
     heroTag = Get.arguments['heroTag'];
-    videoIntroController =
-        Get.put(VideoIntroController(bvid: widget.bvid!), tag: heroTag);
+
+    /// 和页面/简介面板保持同一个实例，避免重复 put
+    try {
+      videoIntroController = Get.find<VideoIntroController>(tag: heroTag);
+    } catch (_) {
+      videoIntroController =
+          Get.put(VideoIntroController(bvid: widget.bvid!), tag: heroTag);
+    }
   }
 
   void fullScreenStatusListener() {
@@ -121,30 +128,6 @@ class _HeaderControlState extends State<HeaderControl> {
                   child: Material(
                 child: ListView(
                   children: [
-                    // ListTile(
-                    //   onTap: () {},
-                    //   dense: true,
-                    //   enabled: false,
-                    //   leading:
-                    //       const Icon(Icons.network_cell_outlined, size: 20),
-                    //   title: Text('省流模式', style: titleStyle),
-                    //   subtitle: Text('低画质 ｜ 减少视频缓存', style: subTitleStyle),
-                    //   trailing: Transform.scale(
-                    //     scale: 0.75,
-                    //     child: Switch(
-                    //       thumbIcon: MaterialStateProperty.resolveWith<Icon?>(
-                    //           (Set<MaterialState> states) {
-                    //         if (states.isNotEmpty &&
-                    //             states.first == MaterialState.selected) {
-                    //           return const Icon(Icons.done);
-                    //         }
-                    //         return null; // All other states will use the default thumbIcon.
-                    //       }),
-                    //       value: false,
-                    //       onChanged: (value) => {},
-                    //     ),
-                    //   ),
-                    // ),
                     ListTile(
                       onTap: () async {
                         final res = await UserHttp.toViewLater(
@@ -259,7 +242,6 @@ class _HeaderControlState extends State<HeaderControl> {
                         setState(() {
                           isSending = true; // 开始发送，更新状态
                         });
-                        //修改按钮文字
                         final dynamic res = await DanmakaHttp.shootDanmaku(
                           oid: widget.videoDetailCtr!.cid.value,
                           msg: textController.text,
@@ -273,8 +255,6 @@ class _HeaderControlState extends State<HeaderControl> {
                         });
                         if (res['status']) {
                           SmartDialog.showToast('发送成功');
-                          // 发送成功，自动预览该弹幕，避免重新请求
-                          // TODO: 暂停状态下预览弹幕仍会移动与计时，可考虑添加到dmSegList或其他方式实现
                           widget.controller!.danmakuController!.addItems([
                             DanmakuItem(
                               msg,
@@ -372,7 +352,6 @@ class _HeaderControlState extends State<HeaderControl> {
                         contentPadding: const EdgeInsets.only(),
                         title: const Text("额外等待视频播放完毕", style: titleStyle),
                         trailing: Switch(
-                          // thumb color (round icon)
                           activeColor: Theme.of(context).colorScheme.primary,
                           activeTrackColor:
                               Theme.of(context).colorScheme.primaryContainer,
@@ -381,9 +360,7 @@ class _HeaderControlState extends State<HeaderControl> {
                           inactiveTrackColor:
                               Theme.of(context).colorScheme.surface,
                           splashRadius: 10.0,
-                          // boolean variable value
                           value: shutdownTimerService.waitForPlayingCompleted,
-                          // changes the state of the switch
                           onChanged: (value) => setState(() =>
                               shutdownTimerService.waitForPlayingCompleted =
                                   value),
@@ -398,18 +375,15 @@ class _HeaderControlState extends State<HeaderControl> {
                             onTap: () {
                               shutdownTimerService.exitApp = false;
                               setState(() {});
-                              // Get.back();
                             },
                             text: " 暂停视频 ",
                             selectStatus: !shutdownTimerService.exitApp,
                           ),
                           const Spacer(),
-                          // const SizedBox(width: 10),
                           ActionRowLineItem(
                             onTap: () {
                               shutdownTimerService.exitApp = true;
                               setState(() {});
-                              // Get.back();
                             },
                             text: " 退出APP ",
                             selectStatus: shutdownTimerService.exitApp,
@@ -503,7 +477,6 @@ class _HeaderControlState extends State<HeaderControl> {
                   if (i == currentSpeed) ...<Widget>[
                     FilledButton(
                       onPressed: () async {
-                        // setState(() => currentSpeed = i),
                         await widget.controller!.setPlaybackSpeed(i);
                         Get.back();
                       },
@@ -512,7 +485,6 @@ class _HeaderControlState extends State<HeaderControl> {
                   ] else ...[
                     FilledButton.tonal(
                       onPressed: () async {
-                        // setState(() => currentSpeed = i),
                         await widget.controller!.setPlaybackSpeed(i);
                         Get.back();
                       },
@@ -555,7 +527,6 @@ class _HeaderControlState extends State<HeaderControl> {
     /// 可用的质量分类
     int userfulQaSam = 0;
     if (videoInfo.dash != null) {
-      // dash格式视频一次请求会返回所有可播放的清晰度video
       final List<VideoItem> video = videoInfo.dash!.video!;
       final Set<int> idSet = {};
       for (final VideoItem item in video) {
@@ -568,7 +539,6 @@ class _HeaderControlState extends State<HeaderControl> {
     }
 
     if (videoInfo.durl != null) {
-      // durl格式视频一次请求返回对应清晰度video
       userfulQaSam = videoFormat.length - 1;
     }
 
@@ -627,7 +597,6 @@ class _HeaderControlState extends State<HeaderControl> {
                               Get.back();
                             },
                             dense: true,
-                            // 可能包含会员解锁画质
                             enabled: i >= totalQaSam - userfulQaSam,
                             contentPadding:
                                 const EdgeInsets.only(left: 20, right: 20),
@@ -685,7 +654,7 @@ class _HeaderControlState extends State<HeaderControl> {
                 child: Material(
                   child: ListView(
                     children: <Widget>[
-                      for (final AudioItem i in audio) ...<Widget>[
+                      for (final AudioItem i in audio) ...[
                         ListTile(
                           onTap: () {
                             if (currentAudioQa.code == i.id) {
@@ -726,11 +695,9 @@ class _HeaderControlState extends State<HeaderControl> {
 
   // 选择解码格式
   void showSetDecodeFormats() {
-    // 当前选中的解码格式
     final VideoDecodeFormats currentDecodeFormats =
         widget.videoDetailCtr!.currentDecodeFormats!;
     final VideoItem firstVideo = widget.videoDetailCtr!.firstVideo;
-    // 当前视频可用的解码格式
     final List<FormatItem> videoFormat = videoInfo.supportFormats!;
     final List list = videoFormat
         .firstWhere((FormatItem e) => e.quality == firstVideo.quality!.code)
@@ -801,7 +768,6 @@ class _HeaderControlState extends State<HeaderControl> {
 
   /// 弹幕功能
   void showSetDanmaku() async {
-    // 屏蔽类型
     final List<Map<String, dynamic>> blockTypesList = [
       {'value': 5, 'label': '顶部'},
       {'value': 2, 'label': '滚动'},
@@ -809,7 +775,6 @@ class _HeaderControlState extends State<HeaderControl> {
       {'value': 6, 'label': '彩色'},
     ];
     final List blockTypes = widget.controller!.blockTypes;
-    // 显示区域
     final List<Map<String, dynamic>> showAreas = [
       {'value': 0.25, 'label': '1/4屏'},
       {'value': 0.5, 'label': '半屏'},
@@ -817,13 +782,9 @@ class _HeaderControlState extends State<HeaderControl> {
       {'value': 1.0, 'label': '满屏'},
     ];
     double showArea = widget.controller!.showArea;
-    // 不透明度
     double opacityVal = widget.controller!.opacityVal;
-    // 字体大小
     double fontSizeVal = widget.controller!.fontSizeVal;
-    // 弹幕速度
     double danmakuDurationVal = widget.controller!.danmakuDurationVal;
-    // 弹幕描边
     double strokeWidth = widget.controller!.strokeWidth;
 
     final DanmakuController danmakuController =
@@ -880,7 +841,6 @@ class _HeaderControlState extends State<HeaderControl> {
                                   hideTop: blockTypes.contains(5),
                                   hideBottom: blockTypes.contains(4),
                                   hideScroll: blockTypes.contains(2),
-                                  // 添加或修改其他需要修改的选项属性
                                 );
                                 danmakuController.updateOption(updatedOption);
                               } catch (_) {}
@@ -1222,7 +1182,6 @@ class _HeaderControlState extends State<HeaderControl> {
                 color: Colors.white,
               ),
               fuc: () async {
-                // 销毁播放器实例
                 await widget.controller!.dispose(type: 'all');
                 if (mounted) {
                   Navigator.popUntil(
@@ -1232,14 +1191,6 @@ class _HeaderControlState extends State<HeaderControl> {
             ),
           ],
           const Spacer(),
-          // ComBtn(
-          //   icon: const Icon(
-          //     FontAwesomeIcons.cropSimple,
-          //     size: 15,
-          //     color: Colors.white,
-          //   ),
-          //   fuc: () => _.screenshot(),
-          // ),
           ComBtn(
             icon: const Icon(
               Icons.cast,

@@ -1,3 +1,4 @@
+
 import 'package:bottom_sheet/bottom_sheet.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/services.dart';
@@ -53,10 +54,15 @@ class _VideoIntroPanelState extends State<VideoIntroPanel>
   void initState() {
     super.initState();
 
-    /// fix 全屏时参数丢失
+    /// fix 全屏时参数丢失 + 避免重复 put，统一使用同一个 tag 的实例
     heroTag = Get.arguments['heroTag'];
-    videoIntroController =
-        Get.put(VideoIntroController(bvid: widget.bvid), tag: heroTag);
+    try {
+      videoIntroController = Get.find<VideoIntroController>(tag: heroTag);
+    } catch (_) {
+      videoIntroController =
+          Get.put(VideoIntroController(bvid: widget.bvid), tag: heroTag);
+    }
+
     _futureBuilderFuture = videoIntroController.queryVideoIntro();
     videoIntroController.videoDetail.listen((value) {
       videoDetail = value;
@@ -65,7 +71,7 @@ class _VideoIntroPanelState extends State<VideoIntroPanel>
 
   @override
   void dispose() {
-    videoIntroController.onClose();
+    // 不手动调用 onClose，交给 GetX 生命周期管理，避免误清理共享实例
     super.dispose();
   }
 
@@ -162,8 +168,13 @@ class _VideoInfoState extends State<VideoInfo> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     heroTag = widget.heroTag!;
-    videoIntroController =
-        Get.put(VideoIntroController(bvid: widget.bvid), tag: heroTag);
+    // 与外层保持同一个实例，避免重复 put
+    try {
+      videoIntroController = Get.find<VideoIntroController>(tag: heroTag);
+    } catch (_) {
+      videoIntroController =
+          Get.put(VideoIntroController(bvid: widget.bvid), tag: heroTag);
+    }
     videoDetailCtr = Get.find<VideoDetailController>(tag: heroTag);
     sheetHeight = localCache.get('sheetHeight');
 
