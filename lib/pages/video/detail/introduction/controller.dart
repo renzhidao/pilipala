@@ -1,3 +1,4 @@
+
 import 'dart:async';
 
 import 'package:bottom_sheet/bottom_sheet.dart';
@@ -76,7 +77,7 @@ class VideoIntroController extends GetxController {
         setting.get(SettingBoxKey.enableOnlineTotal, defaultValue: false);
     if (isShowOnlineTotal) {
       queryOnlineTotal();
-      startTimer();
+      startTimer(); // 在页面加载时启动定时器
     }
     enableRelatedVideo =
         setting.get(SettingBoxKey.enableRelatedVideo, defaultValue: true);
@@ -257,6 +258,7 @@ class VideoIntroController extends GetxController {
 
   // （取消）收藏
   Future actionFavVideo({type = 'choose'}) async {
+    // 收藏至默认文件夹
     if (type == 'default') {
       await queryVideoInFolder();
       int defaultFolderId = favFolderData.value.list!.first.id!;
@@ -267,6 +269,7 @@ class VideoIntroController extends GetxController {
         delIds: favStatus == 1 ? '$defaultFolderId' : '',
       );
       if (result['status']) {
+        // 重新获取收藏状态
         await queryHasFavVideo();
         SmartDialog.showToast('操作成功');
       } else {
@@ -283,6 +286,7 @@ class VideoIntroController extends GetxController {
         }
       }
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
     SmartDialog.showLoading(msg: '请求中');
@@ -295,6 +299,7 @@ class VideoIntroController extends GetxController {
       addMediaIdsNew = [];
       delMediaIdsNew = [];
       Get.back();
+      // 重新获取收藏状态
       await queryHasFavVideo();
       SmartDialog.showToast('操作成功');
     } else {
@@ -347,6 +352,91 @@ class VideoIntroController extends GetxController {
     return result;
   }
 
+  // 关注/取关up（恢复）
+  Future actionRelationMod() async {
+    feedBack();
+    if (userInfo == null) {
+      SmartDialog.showToast('账号未登录');
+      return;
+    }
+    final int currentStatus = followStatus['attribute'];
+    int actionStatus = 0;
+    switch (currentStatus) {
+      case 0:
+        actionStatus = 1; // 未关注 -> 关注
+        break;
+      case 2:
+        actionStatus = 2; // 已关注 -> 取关
+        break;
+      default:
+        actionStatus = 0;
+        break;
+    }
+    SmartDialog.show(
+      useSystem: true,
+      animationType: SmartAnimationType.centerFade_otherSlide,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('提示'),
+          content: Text(currentStatus == 0 ? '关注UP主?' : '取消关注UP主?'),
+          actions: [
+            TextButton(
+              onPressed: () => SmartDialog.dismiss(),
+              child: Text(
+                '点错了',
+                style: TextStyle(color: Theme.of(context).colorScheme.outline),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                var result = await VideoHttp.relationMod(
+                  mid: videoDetail.value.owner!.mid!,
+                  act: actionStatus,
+                  reSrc: 14,
+                );
+                if (result['status']) {
+                  int next;
+                  switch (currentStatus) {
+                    case 0:
+                      next = 2;
+                      break;
+                    case 2:
+                      next = 0;
+                      break;
+                    default:
+                      next = 0;
+                      break;
+                  }
+                  followStatus['attribute'] = next;
+                  followStatus.refresh();
+                  if (next == 2) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('关注成功'),
+                          duration: const Duration(seconds: 2),
+                          action: SnackBarAction(
+                            label: '设置分组',
+                            onPressed: setFollowGroup,
+                          ),
+                          showCloseIcon: true,
+                        ),
+                      );
+                    }
+                  }
+                } else {
+                  SmartDialog.showToast(result['msg'] ?? '操作失败');
+                }
+                SmartDialog.dismiss();
+              },
+              child: const Text('确认'),
+            )
+          ],
+        );
+      },
+    );
+  }
+
   // 修改分P或番剧分集
   Future changeSeasonOrbangu(
     String bvid,
@@ -354,6 +444,7 @@ class VideoIntroController extends GetxController {
     int? aid,
     String? cover,
   ) async {
+    // 重新获取视频资源
     final VideoDetailController videoDetailCtr =
         Get.find<VideoDetailController>(tag: heroTag);
     if (enableRelatedVideo) {
@@ -373,7 +464,9 @@ class VideoIntroController extends GetxController {
       ..clearSubtitleContent();
     await videoDetailCtr.getSubtitle();
     videoDetailCtr.setSubtitleContent();
+    // 重新请求评论
     try {
+      /// 未渲染回复组件时可能异常
       final VideoReplyController videoReplyCtr =
           Get.find<VideoReplyController>(tag: heroTag);
       videoReplyCtr.aid = aid;
@@ -385,10 +478,10 @@ class VideoIntroController extends GetxController {
   }
 
   void startTimer() {
-    const duration = Duration(seconds: 10);
+    const duration = Duration(seconds: 10); // 设置定时器间隔为10秒
     timer = Timer.periodic(duration, (Timer timer) {
       if (!isPaused) {
-        queryOnlineTotal();
+        queryOnlineTotal(); // 定时器回调函数，发起请求
       }
     });
   }
@@ -408,7 +501,7 @@ class VideoIntroController extends GetxController {
   @override
   void onClose() {
     if (timer != null) {
-      timer!.cancel();
+      timer!.cancel(); // 销毁页面时取消定时器
     }
     super.onClose();
   }
@@ -421,6 +514,7 @@ class VideoIntroController extends GetxController {
     final VideoDetailController videoDetailCtr =
         Get.find<VideoDetailController>(tag: heroTag);
 
+    /// 优先稍后再看、收藏夹
     if (videoDetailCtr.isWatchLaterVisible.value) {
       episodes.addAll(videoDetailCtr.mediaList);
     } else if (videoDetail.value.ugcSeason != null) {
@@ -449,6 +543,7 @@ class VideoIntroController extends GetxController {
       cid = episodes[nextIndex].cid!;
     }
 
+    // 列表循环
     if (nextIndex >= episodes.length) {
       if (platRepeat == PlayRepeat.listCycle) {
         nextIndex = 0;
@@ -462,6 +557,7 @@ class VideoIntroController extends GetxController {
     changeSeasonOrbangu(rBvid, cid, rAid, cover);
   }
 
+  // 设置关注分组
   void setFollowGroup() {
     showFlexibleBottomSheet(
       bottomSheetBorderRadius: const BorderRadius.only(
@@ -484,6 +580,7 @@ class VideoIntroController extends GetxController {
     );
   }
 
+  // ai总结
   Future aiConclusion() async {
     SmartDialog.showLoading(msg: '正在生成ai总结');
     final res = await VideoHttp.aiConclusion(
@@ -504,6 +601,7 @@ class VideoIntroController extends GetxController {
     bottomSheetController?.close();
   }
 
+  // 播放器底栏 选集 回调
   void showEposideHandler() {
     late List episodes;
     VideoEpidoesType dataType = VideoEpidoesType.videoEpisode;
@@ -548,6 +646,7 @@ class VideoIntroController extends GetxController {
     );
   }
 
+  //
   oneThreeDialog() {
     showDialog(
       context: Get.context!,
