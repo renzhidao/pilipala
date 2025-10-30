@@ -1,3 +1,4 @@
+
 // ignore_for_file: invalid_use_of_protected_member
 
 import 'package:easy_debounce/easy_throttle.dart';
@@ -56,13 +57,9 @@ class _SearchPanelState extends State<SearchPanel>
     scrollController.addListener(() async {
       if (scrollController.position.pixels >=
           scrollController.position.maxScrollExtent - 100) {
-        // 防止重复触发
-        if (!_searchPanelController.isLoading.value && 
-            _searchPanelController.hasMore.value) {
-          EasyThrottle.throttle('search_load_more', const Duration(seconds: 1), () {
-            _searchPanelController.onSearch(type: 'onLoad');
-          });
-        }
+        EasyThrottle.throttle('history', const Duration(seconds: 1), () {
+          _searchPanelController.onSearch(type: 'onLoad');
+        });
       }
     });
     _futureBuilderFuture = _searchPanelController.onSearch();
@@ -72,6 +69,52 @@ class _SearchPanelState extends State<SearchPanel>
   void dispose() {
     scrollController.removeListener(() {});
     super.dispose();
+  }
+
+  // 所有非“视频”类型的公共“精准”开关条
+  Widget _exactToggleBar() {
+    return Container(
+      width: double.infinity,
+      height: 36,
+      padding: const EdgeInsets.only(left: 8, right: 12),
+      color: Theme.of(context).colorScheme.surface,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Obx(
+          () => FilterChip(
+            label: const Text('精准'),
+            selected: _searchPanelController.order.value == 'exact',
+            showCheckmark: false,
+            labelStyle: TextStyle(
+              color: _searchPanelController.order.value == 'exact'
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.outline,
+            ),
+            selectedColor: Colors.transparent,
+            backgroundColor: Colors.transparent,
+            side: BorderSide.none,
+            onSelected: (selected) async {
+              _searchPanelController.order.value = selected ? 'exact' : '';
+              await _searchPanelController.onRefresh();
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 包装一个带“精准开关”的内容（仅非视频类型使用）
+  Widget _withExactBar(Widget child) {
+    return Stack(
+      alignment: Alignment.topCenter,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 36),
+          child: child,
+        ),
+        _exactToggleBar(),
+      ],
+    );
   }
 
   @override
@@ -86,28 +129,47 @@ class _SearchPanelState extends State<SearchPanel>
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.data != null) {
-              Map data = snapshot.data;
+              Map data = snapshot.data as Map;
               var ctr = _searchPanelController;
               RxList list = ctr.resultList;
               if (data['status']) {
                 return Obx(() {
+                  // 根据搜索类型选择渲染内容
                   switch (widget.searchType) {
                     case SearchType.video:
+                      // 视频类型：保留原有视频面板（自带“精准/筛选”UI）
                       return SearchVideoPanel(
                         ctr: _searchPanelController,
                         list: list.value,
                       );
+
                     case SearchType.media_bangumi:
-                      return searchMbangumiPanel(context, ctr, list);
-                    case SearchType.bili_user:
-                      return searchUserPanel(context, ctr, list);
-                    case SearchType.live_room:
-                      return searchLivePanel(context, ctr, list);
-                    case SearchType.article:
-                      return SearchArticlePanel(
-                        ctr: _searchPanelController,
-                        list: list.value,
+                      // 番剧：在列表上方添加“精准”开关
+                      return _withExactBar(
+                        searchMbangumiPanel(context, ctr, list),
                       );
+
+                    case SearchType.bili_user:
+                      // 用户：在列表上方添加“精准”开关
+                      return _withExactBar(
+                        searchUserPanel(context, ctr, list),
+                      );
+
+                    case SearchType.live_room:
+                      // 直播：在列表上方添加“精准”开关
+                      return _withExactBar(
+                        searchLivePanel(context, ctr, list),
+                      );
+
+                    case SearchType.article:
+                      // 专栏：在列表上方添加“精准”开关
+                      return _withExactBar(
+                        SearchArticlePanel(
+                          ctr: _searchPanelController,
+                          list: list.value,
+                        ),
+                      );
+
                     default:
                       return const SizedBox();
                   }
