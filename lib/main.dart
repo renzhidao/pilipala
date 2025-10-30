@@ -1,3 +1,4 @@
+
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
@@ -27,7 +28,7 @@ import 'package:pilipala/utils/recommend_filter.dart';
 import 'package:catcher_2/catcher_2.dart';
 import './services/loggeer.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
   await SystemChrome.setPreferredOrientations(
@@ -36,6 +37,9 @@ void main() async {
   clearLogs();
   Request();
   await Request.setCookie();
+
+  // 提前初始化：必须在任何页面使用 videoPlayerServiceHandler 之前完成
+  await setupServiceLocator();
 
   // 异常捕获 logo记录
   final Catcher2Options releaseConfig = Catcher2Options(
@@ -269,7 +273,10 @@ class BuildMainApp extends StatelessWidget {
       onReady: () async {
         RecommendFilter();
         Data.init();
-        setupServiceLocator();
+        // 兜底：若上面未初始化成功，这里补一刀（正常情况下已就绪，不会再执行）
+        if (!serviceLocatorReady) {
+          await setupServiceLocator();
+        }
       },
     );
   }
