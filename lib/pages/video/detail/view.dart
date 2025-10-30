@@ -80,17 +80,24 @@ class _VideoDetailPageState extends State<VideoDetailPage>
     videoIntroController = Get.put(
         VideoIntroController(bvid: Get.parameters['bvid']!),
         tag: heroTag);
+    // 监听简介数据变化：仅在 serviceLocator 准备就绪后调用 handler
     videoIntroController.videoDetail.listen((value) {
-      videoPlayerServiceHandler.onVideoDetailChange(value, vdCtr.cid.value);
+      if (serviceLocatorReady) {
+        videoPlayerServiceHandler.onVideoDetailChange(value, vdCtr.cid.value);
+      }
     });
     if (vdCtr.videoType == SearchType.media_bangumi) {
       bangumiIntroController = Get.put(BangumiIntroController(), tag: heroTag);
       bangumiIntroController.bangumiDetail.listen((value) {
-        videoPlayerServiceHandler.onVideoDetailChange(value, vdCtr.cid.value);
+        if (serviceLocatorReady) {
+          videoPlayerServiceHandler.onVideoDetailChange(value, vdCtr.cid.value);
+        }
       });
       vdCtr.cid.listen((p0) {
-        videoPlayerServiceHandler.onVideoDetailChange(
-            bangumiIntroController.bangumiDetail.value, p0);
+        if (serviceLocatorReady) {
+          videoPlayerServiceHandler.onVideoDetailChange(
+              bangumiIntroController.bangumiDetail.value, p0);
+        }
       });
     }
     statusBarHeight = localCache.get('statusBarHeight');
@@ -233,7 +240,9 @@ class _VideoDetailPageState extends State<VideoDetailPage>
     if (vdCtr.floating != null) {
       vdCtr.floating!.dispose();
     }
-    videoPlayerServiceHandler.onVideoDetailDispose();
+    if (serviceLocatorReady) {
+      videoPlayerServiceHandler.onVideoDetailDispose();
+    }
     if (Platform.isAndroid) {
       floating.toggleAutoPip(autoEnter: false);
       floating.dispose();
@@ -317,11 +326,6 @@ class _VideoDetailPageState extends State<VideoDetailPage>
   // 生命周期监听
   void lifecycleListener() {
     _lifecycleListener = AppLifecycleListener(
-      // onResume: () => _handleTransition('resume'),
-      // 后台
-      // onInactive: () => _handleTransition('inactive'),
-      // 在Android和iOS端不生效
-      // onHide: () => _handleTransition('hide'),
       onShow: () => _handleTransition('show'),
       onPause: () => _handleTransition('pause'),
       onRestart: () => _handleTransition('restart'),
@@ -496,7 +500,6 @@ class _VideoDetailPageState extends State<VideoDetailPage>
     late RxDouble videoHeight = defaultVideoHeight.obs;
     final double pinnedHeaderHeight =
         statusBarHeight + kToolbarHeight + videoHeight.value;
-    // ignore: no_leading_underscores_for_local_identifiers
 
     // 竖屏
     final bool isPortrait = _context.orientation == Orientation.portrait;

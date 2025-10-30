@@ -5,11 +5,11 @@ import 'audio_session.dart';
 late VideoPlayerServiceHandler videoPlayerServiceHandler;
 late AudioSessionHandler audioSessionHandler;
 
-// 标记：是否已完成初始化（避免重复初始化 & 竞态）
+// 初始化就绪标记，供使用处判断是否可安全调用
 bool serviceLocatorReady = false;
 
 Future<void> setupServiceLocator() async {
-  if (serviceLocatorReady) return;
+  if (serviceLocatorReady) return; // 避免重复初始化
   final audio = await initAudioService();
   videoPlayerServiceHandler = audio;
   audioSessionHandler = AudioSessionHandler();

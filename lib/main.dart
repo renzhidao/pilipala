@@ -38,9 +38,6 @@ Future<void> main() async {
   Request();
   await Request.setCookie();
 
-  // 提前初始化：必须在任何页面使用 videoPlayerServiceHandler 之前完成
-  await setupServiceLocator();
-
   // 异常捕获 logo记录
   final Catcher2Options releaseConfig = Catcher2Options(
     SilentReportMode(),
@@ -273,10 +270,8 @@ class BuildMainApp extends StatelessWidget {
       onReady: () async {
         RecommendFilter();
         Data.init();
-        // 兜底：若上面未初始化成功，这里补一刀（正常情况下已就绪，不会再执行）
-        if (!serviceLocatorReady) {
-          await setupServiceLocator();
-        }
+        // 初始化服务定位（不阻塞首帧渲染）
+        setupServiceLocator();
       },
     );
   }
